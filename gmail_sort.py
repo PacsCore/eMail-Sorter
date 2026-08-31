@@ -14,7 +14,7 @@ def get_service():
     creds_env = os.environ.get('GMAIL_CREDENTIALS')
     
     if token_env:
-        creds = Credentials.from_authorized_user_file(json.loads(token_env), SCOPES)
+        creds = Credentials.from_authorized_user_info(json.loads(token_env), SCOPES)
     elif os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 
