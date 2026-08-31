@@ -1,7 +1,7 @@
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 def get_labels():
     flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
@@ -29,7 +29,21 @@ def get_header(headers, name):
             return header["value"]
     return ""
 
+def get_or_create_label(service, label_name, existing_labels):
+    for label in existing_labels:
+        if label["name"] == label_name:
+            return label["id"]
+
+    new_label = service.users().labels().create(userId="me", body={'name': label_name, "labelListVisibility": "labelShow", "messageListVisibility": "show"}).execute()
+    existing_labels.append(new_label)
+    return new_label["id"]
+
+
 service = get_labels()
+
+#fetch existing labels
+label_results = service.users().labels().list(userId='me').execute()
+existing_labels = label_results.get('labels', [])
 
 results = service.users().messages().list(userId='me', maxResults=10).execute()
 messages = results.get('messages', [])
@@ -42,9 +56,11 @@ for msg in messages:
 
     sender = get_header(headers, "From")
     subject = get_header(headers, "Subject")
-
     category = categorize(sender, subject)
-    print(f"{subject} -> {category}")
+
+    label_id = get_or_create_label(service, category, existing_labels)
+
+    service.users().messages().modify(userId="me", id=msg['id'], body={'addLabelIds': [label_id]}).execute()
 
     counts[category] = counts.get(category, 0) + 1
 
