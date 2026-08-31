@@ -20,6 +20,7 @@ def get_service():
             creds = flow.run_local_server(port=0)
             with open('token.json', 'w') as token:
                 token.write(creds.to_json())
+            print("Token saved to token.json")
     return build('gmail', 'v1', credentials=creds)
 
 def get_labels():
@@ -58,7 +59,7 @@ def get_or_create_label(service, label_name, existing_labels):
     return new_label["id"]
 
 
-service = get_labels()
+service = get_service()
 
 #fetch existing labels
 label_results = service.users().labels().list(userId='me').execute()
