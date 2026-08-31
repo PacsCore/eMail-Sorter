@@ -45,7 +45,7 @@ service = get_labels()
 label_results = service.users().labels().list(userId='me').execute()
 existing_labels = label_results.get('labels', [])
 
-results = service.users().messages().list(userId='me', maxResults=10).execute()
+results = service.users().messages().list(userId='me', maxResults=100).execute()
 messages = results.get('messages', [])
 
 counts = {}
