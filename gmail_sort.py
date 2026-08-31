@@ -1,4 +1,5 @@
 import os
+import json
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -8,8 +9,13 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 def get_service():
     creds = None
+
+    token_env = os.environ.get('GMAIL_TOKEN')
+    creds_env = os.environ.get('GMAIL_CREDENTIALS')
     
-    if os.path.exists('token.json'):
+    if token_env:
+        creds = Credentials.from_authorized_user_file(json.loads(token_env), SCOPES)
+    elif os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 
     if not creds or not creds.valid:
@@ -18,9 +24,11 @@ def get_service():
         else:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-            with open('token.json', 'w') as token:
+
+        if token_env:
+            with open(token_env, 'w') as token:
                 token.write(creds.to_json())
-            print("Token saved to token.json")
+
     return build('gmail', 'v1', credentials=creds)
 
 def get_labels():
